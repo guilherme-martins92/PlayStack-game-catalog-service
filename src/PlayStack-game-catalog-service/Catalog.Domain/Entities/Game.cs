@@ -10,5 +10,7 @@
         public required string Publisher { get; set; }
         public required string Developer { get; set; }
         public decimal Price { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

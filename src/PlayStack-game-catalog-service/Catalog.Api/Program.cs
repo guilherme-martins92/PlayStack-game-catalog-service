@@ -1,4 +1,7 @@
+using FluentValidation;
+using PlayStack_game_catalog_service.Catalog.Application.DTOs;
 using PlayStack_game_catalog_service.Catalog.Application.UseCases;
+using PlayStack_game_catalog_service.Catalog.Application.Validators;
 using PlayStack_game_catalog_service.Catalog.Domain.Entities;
 using PlayStack_game_catalog_service.Catalog.Domain.Interfaces;
 using PlayStack_game_catalog_service.Catalog.Infrastructure.Repositories;
@@ -12,6 +15,10 @@ builder.Services.AddOpenApi();
 // Injeção de dependências
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<GetGameByIdUseCase>();
+builder.Services.AddScoped<CreateGameUseCase>();
+
+// Registro do validador de GameDto com FluentValidation
+builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
 
 var app = builder.Build();
 
@@ -35,10 +42,10 @@ app.MapGet("/games", async (IGameRepository repository) =>
     return Results.Ok(games);
 });
 
-app.MapPost("/game", async (Game game, IGameRepository repository) =>
+app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>
 {
-    await repository.AddAsync(game);
-    return Results.Created($"/game/{game.Id}", game);
+    var result = await useCase.ExecuteAsync(game);
+    return result.IsSuccess ? Results.Created($"/games/{result.Data!.Id}", result.Data) : Results.BadRequest(result.Errors);
 });
 
 app.MapPut("/game/{id}", async (int id, Game game, IGameRepository repository) =>
