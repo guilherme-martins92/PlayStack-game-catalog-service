@@ -16,6 +16,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<GetGameByIdUseCase>();
 builder.Services.AddScoped<CreateGameUseCase>();
+builder.Services.AddScoped<GetAllGamesUseCase>();
 
 // Registro do validador de GameDto com FluentValidation
 builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
@@ -36,10 +37,10 @@ app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
     return game is not null ? Results.Ok(game) : Results.NotFound("Jogo não encontrado.");
 });
 
-app.MapGet("/games", async (IGameRepository repository) =>
+app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
 {
-    var games = await repository.GetAllAsync();
-    return Results.Ok(games);
+    var games = await useCase.ExecuteAsync();
+    return games.Data is null || games.Data.Any() ? Results.Ok(games) : Results.NotFound("No games found.");
 });
 
 app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>
