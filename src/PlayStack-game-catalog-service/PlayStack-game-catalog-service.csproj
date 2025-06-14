@@ -14,10 +14,4 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1-Preview.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Catalog.Application\" />
-    <Folder Include="Catalog.Infrastructure\" />
-    <Folder Include="Catalog.Domain\" />
-  </ItemGroup>
-
 </Project>
