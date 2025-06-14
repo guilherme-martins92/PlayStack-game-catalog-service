@@ -7,7 +7,7 @@ using PlayStack_game_catalog_service.Catalog.Application.UseCases;
 using PlayStack_game_catalog_service.Catalog.Domain.Entities;
 using PlayStack_game_catalog_service.Catalog.Domain.Interfaces;
 
-namespace PlayStack_game_catalog_service_tests
+namespace PlayStack_game_catalog_service_tests.UseCases
 {
     public class CreateGameUseCaseTests
     {
