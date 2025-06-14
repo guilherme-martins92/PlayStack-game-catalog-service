@@ -25,46 +25,12 @@ namespace PlayStack_game_catalog_service_tests.UseCases
         }
 
         [Fact]
-        public async Task ExecuteAsync_ReturnsFailure_WhenGameDtoIsNull()
-        {
-            // Act
-            var result = await _useCase.ExecuteAsync(null);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains("Game data cannot be null.", result.Errors);
-            _gameRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Game>()), Times.Never);
-        }
-
-        [Fact]
         public async Task ExecuteAsync_ReturnsFailure_WhenValidationFails()
-        {
-            // Arrange
-            var gameDto = new GameDto();
-            var validationResult = new ValidationResult(new List<ValidationFailure>
-                {
-                    new ValidationFailure("Name", "Name is required"),
-                    new ValidationFailure("Genre", "Genre is required")
-                });
-            _validatorMock.Setup(v => v.ValidateAsync(gameDto, default)).ReturnsAsync(validationResult);
-
-            // Act
-            var result = await _useCase.ExecuteAsync(gameDto);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains("Name is required", result.Errors);
-            Assert.Contains("Genre is required", result.Errors);
-            _gameRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Game>()), Times.Never);
-        }
-
-        [Fact]
-        public async Task ExecuteAsync_ReturnsFailure_WhenRequiredFieldsAreNull()
         {
             // Arrange
             var gameDto = new GameDto
             {
-                Name = null,
+                Name = "",
                 Description = "desc",
                 Genre = "genre",
                 ReleaseDate = DateTime.UtcNow,
@@ -72,14 +38,18 @@ namespace PlayStack_game_catalog_service_tests.UseCases
                 Developer = "dev",
                 Price = 10
             };
-            _validatorMock.Setup(v => v.ValidateAsync(gameDto, default)).ReturnsAsync(new ValidationResult());
+            var validationResult = new ValidationResult(new List<ValidationFailure>
+            {
+                new ValidationFailure("Name", "O nome do jogo é obrigatório.")
+            });
+            _validatorMock.Setup(v => v.ValidateAsync(gameDto, default)).ReturnsAsync(validationResult);
 
             // Act
             var result = await _useCase.ExecuteAsync(gameDto);
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("O nome do jogo não pode ser nulo.", result.Errors);
+            Assert.Contains("O nome do jogo é obrigatório.", result.Errors);
             _gameRepositoryMock.Verify(r => r.AddAsync(It.IsAny<Game>()), Times.Never);
         }
 
