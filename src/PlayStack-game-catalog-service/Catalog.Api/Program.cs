@@ -17,6 +17,8 @@ builder.Services.AddScoped<IGameRepository, GameRepository>();
 builder.Services.AddScoped<GetGameByIdUseCase>();
 builder.Services.AddScoped<CreateGameUseCase>();
 builder.Services.AddScoped<GetAllGamesUseCase>();
+builder.Services.AddScoped<DeleteGameUseCase>();
+
 
 // Registro do validador de GameDto com FluentValidation
 builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
@@ -56,10 +58,10 @@ app.MapPut("/game/{id}", async (int id, Game game, IGameRepository repository) =
     return Results.NoContent();
 });
 
-app.MapDelete("/game/{id}", async (int id, IGameRepository repository) =>
+app.MapDelete("/game/{id}", async (int id, DeleteGameUseCase useCase) =>
 {
-    await repository.DeleteAsync(id);
-    return Results.NoContent();
+    var result = await useCase.ExecuteAsync(id);
+    return result.IsSuccess ? Results.NoContent() : Results.NotFound($"Game with ID {id} not found.");
 });
 
 await app.RunAsync();

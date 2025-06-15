@@ -73,9 +73,9 @@ namespace PlayStack_game_catalog_service.Catalog.Infrastructure.Repositories
             return Task.CompletedTask;
         }
 
-        public Task DeleteAsync(int id)
+        public Task DeleteAsync(Game game)
         {
-            _games.TryRemove(id, out _);
+            _games.TryRemove(game.Id, out _);
             return Task.CompletedTask;
         }
 
