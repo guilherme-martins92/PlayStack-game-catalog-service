@@ -33,14 +33,14 @@ app.UseHttpsRedirection();
 
 app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
 {
-    var game = await useCase.ExecuteAsync(id);
-    return game is not null ? Results.Ok(game) : Results.NotFound("Jogo não encontrado.");
+    var result = await useCase.ExecuteAsync(id);
+    return result.Data is not null ? Results.Ok(result.Data) : Results.NotFound($"Game with ID {id} not found.");
 });
 
 app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
 {
-    var games = await useCase.ExecuteAsync();
-    return games.Data is null || games.Data.Any() ? Results.Ok(games) : Results.NotFound("No games found.");
+    var result = await useCase.ExecuteAsync();
+    return result.Data is null || result.Data.Any() ? Results.Ok(result.Data) : Results.NotFound("No games found.");
 });
 
 app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>
