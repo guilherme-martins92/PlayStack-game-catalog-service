@@ -106,7 +106,7 @@ namespace PlayStack_game_catalog_service_tests.UseCases
 
             // Assert
             Assert.False(result.IsSuccess);
-            Assert.Contains("Ocorreu um erro inesperado.", result.Errors);
+            Assert.Contains("An unexpected error while creating game.", result.Errors);
         }
     }
 }
