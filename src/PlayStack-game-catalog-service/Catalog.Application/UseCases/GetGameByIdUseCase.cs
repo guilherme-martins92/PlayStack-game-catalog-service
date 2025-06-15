@@ -23,15 +23,16 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
                 if (game == null)
                 {
                     _logger.LogWarning("Game with ID {Id} not found.", id);
-                    return Result<Game?>.Success(null);
+                    return Result<Game?>.Failure(new List<string> { $"Game with ID {id} not found." });
                 }
 
                 return Result<Game?>.Success(game);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while retrieving game with ID {Id}: {Message}", id, ex.Message);
-                return Result<Game?>.Failure(new List<string> { "An unexpected error occurred while retrieving the game." });
+                var errorMsg = $"An error occurred while retrieving the game with ID {id}.";
+                _logger.LogError(ex, errorMsg);
+                throw new InvalidOperationException(errorMsg, ex);
             }
         }
     }

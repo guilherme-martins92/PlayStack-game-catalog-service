@@ -35,8 +35,15 @@ app.UseHttpsRedirection();
 
 app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
 {
-    var result = await useCase.ExecuteAsync(id);
-    return result.Data is not null ? Results.Ok(result.Data) : Results.NotFound($"Game with ID {id} not found.");
+    try
+    {
+        var result = await useCase.ExecuteAsync(id);
+        return result.Data is not null ? Results.Ok(result.Data) : Results.NotFound($"Game with ID {id} not found.");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
 });
 
 app.MapGet("/games", async (GetAllGamesUseCase useCase) =>

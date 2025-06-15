@@ -40,38 +40,32 @@ namespace PlayStack_game_catalog_service_tests.UseCases
         }
 
         [Fact]
-        public async Task ExecuteAsync_ReturnsNull_WhenGameDoesNotExist()
+        public async Task ExecuteAsync_ReturnsFailure_WhenGameDoesNotExist()
         {
             // Arrange
             var mockRepo = new Mock<IGameRepository>();
             var mockLogger = new Mock<ILogger<GetGameByIdUseCase>>();
-            mockRepo.Setup(r => r.GetByIdAsync(2)).ReturnsAsync((Game?)null);
+            mockRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((Game?)null);
             var useCase = new GetGameByIdUseCase(mockRepo.Object, mockLogger.Object);
-
             // Act
-            var result = await useCase.ExecuteAsync(2);
-
+            var result = await useCase.ExecuteAsync(1);
             // Assert
-            Assert.True(result.IsSuccess);
+            Assert.False(result.IsSuccess);
             Assert.Null(result.Data);
+            Assert.Single(result.Errors);
+            Assert.Equal("Game with ID 1 not found.", result.Errors[0]);
         }
 
         [Fact]
-        public async Task ExecuteAsync_ReturnsFailure_WhenExceptionThrown()
+        public async Task ExecuteAsync_ShouldThrowsException()
         {
             // Arrange
             var mockRepo = new Mock<IGameRepository>();
             var mockLogger = new Mock<ILogger<GetGameByIdUseCase>>();
-            mockRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ThrowsAsync(new Exception("DB error"));
+            mockRepo.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ThrowsAsync(new Exception("Database error"));
             var useCase = new GetGameByIdUseCase(mockRepo.Object, mockLogger.Object);
-
-            // Act
-            var result = await useCase.ExecuteAsync(3);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.NotNull(result.Errors);
-            Assert.Contains("An unexpected error occurred while retrieving the game.", result.Errors);
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(() => useCase.ExecuteAsync(1));
         }
     }
 }
