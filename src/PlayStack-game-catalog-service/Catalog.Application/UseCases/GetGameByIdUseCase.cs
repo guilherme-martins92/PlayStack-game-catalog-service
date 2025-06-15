@@ -30,9 +30,8 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
             }
             catch (Exception ex)
             {
-                var errorMsg = $"An error occurred while retrieving the game with ID {id}.";
-                _logger.LogError(ex, errorMsg);
-                throw new InvalidOperationException(errorMsg, ex);
+                _logger.LogError(ex, "An error occurred while retrieving the game with ID {GameId}.", id);
+                throw new InvalidOperationException($"An error occurred while retrieving the game with ID {id}.", ex);
             }
         }
     }

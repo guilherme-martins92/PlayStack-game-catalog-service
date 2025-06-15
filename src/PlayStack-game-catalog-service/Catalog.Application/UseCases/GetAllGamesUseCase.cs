@@ -32,9 +32,8 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
             }
             catch (Exception ex)
             {
-                var errorMsg = "An error occurred while retrieving games from the repository.";
-                _logger.LogError(ex, errorMsg);
-                throw new InvalidOperationException(errorMsg, ex);
+                _logger.LogError(ex, "An error occurred while retrieving games from the repository.");
+                throw new InvalidOperationException("An error occurred while retrieving games from the repository.", ex);
             }
         }
     }
