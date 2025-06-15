@@ -41,8 +41,15 @@ app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
 
 app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
 {
-    var result = await useCase.ExecuteAsync();
-    return result.Data is null || result.Data.Any() ? Results.Ok(result.Data) : Results.NotFound("No games found.");
+    try
+    {
+        var result = await useCase.ExecuteAsync();
+        return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
 });
 
 app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>

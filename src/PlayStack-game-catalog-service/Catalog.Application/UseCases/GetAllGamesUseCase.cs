@@ -23,7 +23,8 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
                 if (games == null || !games.Any())
                 {
                     _logger.LogInformation("No games found in the repository.");
-                    return Result<IEnumerable<Game>>.Success(Enumerable.Empty<Game>());
+                    return Result<IEnumerable<Game>>.Failure(new List<string> { "No games found." });
+
                 }
 
                 _logger.LogInformation("Successfully retrieved {Count} games from the repository.", games.Count());
@@ -31,8 +32,9 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while retrieving all games: {Message}", ex.Message);
-                return Result<IEnumerable<Game>>.Failure(new List<string> { "An unexpected error occurred while retrieving games." });
+                var errorMsg = "An error occurred while retrieving games from the repository.";
+                _logger.LogError(ex, errorMsg);
+                throw new InvalidOperationException(errorMsg, ex);
             }
         }
     }
