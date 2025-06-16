@@ -61,8 +61,15 @@ app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
 
 app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>
 {
-    var result = await useCase.ExecuteAsync(game);
-    return result.IsSuccess ? Results.Created($"/games/{result.Data!.Id}", result.Data) : Results.BadRequest(result.Errors);
+    try
+    {
+        var result = await useCase.ExecuteAsync(game);
+        return result.IsSuccess ? Results.Created($"/games/{result.Data!.Id}", result.Data) : Results.BadRequest(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
 });
 
 app.MapPut("/game/{id}", async (int id, Game game, IGameRepository repository) =>

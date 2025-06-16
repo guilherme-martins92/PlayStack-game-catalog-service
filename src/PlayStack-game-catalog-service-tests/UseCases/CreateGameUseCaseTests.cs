@@ -85,7 +85,7 @@ namespace PlayStack_game_catalog_service_tests.UseCases
         }
 
         [Fact]
-        public async Task ExecuteAsync_ReturnsFailure_WhenRepositoryThrowsException()
+        public async Task ExecuteAsync_ShouldThrowsException()
         {
             // Arrange
             var gameDto = new GameDto
@@ -99,14 +99,10 @@ namespace PlayStack_game_catalog_service_tests.UseCases
                 Price = 10
             };
             _validatorMock.Setup(v => v.ValidateAsync(gameDto, default)).ReturnsAsync(new ValidationResult());
-            _gameRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Game>())).ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _useCase.ExecuteAsync(gameDto);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains("An unexpected error while creating game.", result.Errors);
+            _gameRepositoryMock.Setup(r => r.AddAsync(It.IsAny<Game>()))
+                .Throws(new Exception("Database error"));
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(() => _useCase.ExecuteAsync(gameDto));
         }
     }
 }

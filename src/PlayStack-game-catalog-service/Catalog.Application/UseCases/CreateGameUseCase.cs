@@ -50,7 +50,7 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error while creating game: {Message}", ex.Message);
-                return Result<Game>.Failure(new List<string> { "An unexpected error while creating game." });
+                throw new InvalidOperationException("An unexpected error occurred while creating the game.", ex);
             }
         }
     }
