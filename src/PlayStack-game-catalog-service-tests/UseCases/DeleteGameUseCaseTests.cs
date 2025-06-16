@@ -66,33 +66,13 @@ namespace PlayStack_game_catalog_service_tests.UseCases
         }
 
         [Fact]
-        public async Task ExecuteAsync_RepositoryThrowsException_ReturnsFailure()
+        public async Task ExecuteAsync_ShouldThrownException()
         {
             // Arrange
-            int gameId = 99;
-            var game = new Game
-            {
-                Id = gameId,
-                Name = "Test Game",
-                Description = "Test Description",
-                Genre = "Action",
-                ReleaseDate = System.DateTime.UtcNow,
-                Publisher = "Test Publisher",
-                Developer = "Test Developer",
-                Price = 10.0m,
-                CreatedAt = System.DateTime.UtcNow,
-                UpdatedAt = System.DateTime.UtcNow
-            };
-
-            _gameRepositoryMock.Setup(r => r.GetByIdAsync(gameId)).ReturnsAsync(game);
-            _gameRepositoryMock.Setup(r => r.DeleteAsync(game)).ThrowsAsync(new System.Exception("DB error"));
-
-            // Act
-            var result = await _useCase.ExecuteAsync(gameId);
-
-            // Assert
-            Assert.False(result.IsSuccess);
-            Assert.Contains("An unexpected error occurred while deleting the game.", result.Errors);
+            int gameId = 1;
+            _gameRepositoryMock.Setup(r => r.GetByIdAsync(gameId)).Throws(new Exception("Unexpected error"));
+            // Act & Assert
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await _useCase.ExecuteAsync(gameId));
         }
     }
 }

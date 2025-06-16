@@ -30,8 +30,8 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error while deleting game with ID {Id}: {Message}", id, ex.Message);
-                return Result<bool>.Failure(new List<string> { "An unexpected error occurred while deleting the game." });
+                _logger.LogError(ex, "Unexpected error while deleting game with ID {Id}", id);
+                throw new InvalidOperationException("An unexpected error occurred while deleting the game.", ex);
             }
         }
     }

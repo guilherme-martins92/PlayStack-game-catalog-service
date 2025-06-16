@@ -86,8 +86,15 @@ app.MapPut("/game/{id}", async (int id, GameDto game, UpdateGameUseCase useCase)
 
 app.MapDelete("/game/{id}", async (int id, DeleteGameUseCase useCase) =>
 {
-    var result = await useCase.ExecuteAsync(id);
-    return result.IsSuccess ? Results.NoContent() : Results.NotFound($"Game with ID {id} not found.");
+    try
+    {
+        var result = await useCase.ExecuteAsync(id);
+        return result.IsSuccess ? Results.Ok() : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
 });
 
 await app.RunAsync();
