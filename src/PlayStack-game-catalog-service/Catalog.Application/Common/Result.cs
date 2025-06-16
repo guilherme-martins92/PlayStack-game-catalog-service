@@ -4,7 +4,7 @@
     {
         public T? Data { get; private set; }
         public List<string> Errors { get; private set; } = new();
-        public bool IsSuccess => !Errors.Any();
+        public bool IsSuccess => Errors.Count == 0;
 
         private Result(T data) => Data = data;
         private Result(List<string> errors) => Errors = errors;
