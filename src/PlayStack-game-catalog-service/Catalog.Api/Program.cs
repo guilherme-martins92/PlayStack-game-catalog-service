@@ -2,7 +2,6 @@ using FluentValidation;
 using PlayStack_game_catalog_service.Catalog.Application.DTOs;
 using PlayStack_game_catalog_service.Catalog.Application.UseCases;
 using PlayStack_game_catalog_service.Catalog.Application.Validators;
-using PlayStack_game_catalog_service.Catalog.Domain.Entities;
 using PlayStack_game_catalog_service.Catalog.Domain.Interfaces;
 using PlayStack_game_catalog_service.Catalog.Infrastructure.Repositories;
 
@@ -18,7 +17,7 @@ builder.Services.AddScoped<GetGameByIdUseCase>();
 builder.Services.AddScoped<CreateGameUseCase>();
 builder.Services.AddScoped<GetAllGamesUseCase>();
 builder.Services.AddScoped<DeleteGameUseCase>();
-
+builder.Services.AddScoped<UpdateGameUseCase>();
 
 // Registro do validador de GameDto com FluentValidation
 builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
@@ -72,11 +71,17 @@ app.MapPost("/game", async (GameDto game, CreateGameUseCase useCase) =>
     }
 });
 
-app.MapPut("/game/{id}", async (int id, Game game, IGameRepository repository) =>
+app.MapPut("/game/{id}", async (int id, GameDto game, UpdateGameUseCase useCase) =>
 {
-    game.Id = id; // Ensure the ID is set correctly
-    await repository.UpdateAsync(game);
-    return Results.NoContent();
+    try
+    {
+        var result = await useCase.ExecuteAsync(id, game);
+        return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
 });
 
 app.MapDelete("/game/{id}", async (int id, DeleteGameUseCase useCase) =>
