@@ -1,8 +1,10 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using PlayStack_game_catalog_service.Catalog.Application.DTOs;
 using PlayStack_game_catalog_service.Catalog.Application.UseCases;
 using PlayStack_game_catalog_service.Catalog.Application.Validators;
 using PlayStack_game_catalog_service.Catalog.Domain.Interfaces;
+using PlayStack_game_catalog_service.Catalog.Infrastructure;
 using PlayStack_game_catalog_service.Catalog.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +23,9 @@ builder.Services.AddScoped<UpdateGameUseCase>();
 
 // Registro do validador de GameDto com FluentValidation
 builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
+
+builder.Services.AddDbContext<CatalogDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
 
 var app = builder.Build();
 
