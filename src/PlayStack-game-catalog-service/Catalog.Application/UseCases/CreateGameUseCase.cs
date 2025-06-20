@@ -35,7 +35,7 @@ namespace PlayStack_game_catalog_service.Catalog.Application.UseCases
                     Name = gameDto.Name,
                     Description = gameDto.Description,
                     Genre = gameDto.Genre,
-                    ReleaseDate = gameDto.ReleaseDate,
+                    ReleaseDate = DateTime.SpecifyKind(gameDto.ReleaseDate, DateTimeKind.Utc),
                     Publisher = gameDto.Publisher,
                     Developer = gameDto.Developer,
                     Price = gameDto.Price

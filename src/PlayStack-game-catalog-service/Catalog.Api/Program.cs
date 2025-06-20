@@ -24,10 +24,18 @@ builder.Services.AddScoped<UpdateGameUseCase>();
 // Registro do validador de GameDto com FluentValidation
 builder.Services.AddScoped<IValidator<GameDto>, GameValidator>();
 
+Console.WriteLine("ConnectionString carregada: " + builder.Configuration.GetConnectionString("PostgreSQL"));
+
 builder.Services.AddDbContext<CatalogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
