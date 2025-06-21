@@ -1,6 +1,6 @@
-﻿namespace Catalog.Api.Dtos
+﻿namespace Catalog.Application.UseCases.UpdateGameUseCase
 {
-    public class GameCreateDto
+    public class UpdateGameInput
     {
         public required string Name { get; set; }
         public required string Description { get; set; }

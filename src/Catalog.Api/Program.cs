@@ -1,8 +1,30 @@
+using Catalog.Application.UseCases.CreateGameUseCase;
+using Catalog.Application.UseCases.DeleteGameUseCase;
+using Catalog.Application.UseCases.GetAllGamesUseCase;
+using Catalog.Application.UseCases.GetGameByIdUseCase;
+using Catalog.Application.UseCases.UpdateGameUseCase;
+using Catalog.Infrastructure.Data;
+using Catalog.Infrastructure.DependencyInjection;
+using FluentValidation;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services
+    .AddOpenApi()
+    .AddInfrastructure(builder.Configuration);
+
+builder.Services.AddScoped<GetGameByIdUseCase>();
+builder.Services.AddScoped<CreateGameUseCase>();
+builder.Services.AddScoped<GetAllGamesUseCase>();
+builder.Services.AddScoped<DeleteGameUseCase>();
+builder.Services.AddScoped<UpdateGameUseCase>();
+
+builder.Services.AddScoped<IValidator<CreateGameInput>, CreateGameValidator>();
+builder.Services.AddScoped<IValidator<UpdateGameInput>, UpdateGameValidator>();
+
+builder.Services.AddDbContext<CatalogDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgreSQL")));
 
 var app = builder.Build();
 
@@ -14,28 +36,69 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    try
+    {
+        var result = await useCase.ExecuteAsync(id);
+        return result.Data is not null ? Results.Ok(result.Data) : Results.NotFound($"Game with ID {id} not found.");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+});
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+    try
+    {
+        var result = await useCase.ExecuteAsync();
+        return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+});
 
-app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+app.MapPost("/game", async (CreateGameInput game, CreateGameUseCase useCase) =>
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+    try
+    {
+        var result = await useCase.ExecuteAsync(game);
+        return result.IsSuccess ? Results.Created($"/games/{result.Data!.Id}", result.Data) : Results.BadRequest(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+});
+
+app.MapPut("/game/{id}", async (int id, UpdateGameInput game, UpdateGameUseCase useCase) =>
+{
+    try
+    {
+        var result = await useCase.ExecuteAsync(id, game);
+        return result.IsSuccess ? Results.Ok(result.Data) : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+});
+
+app.MapDelete("/game/{id}", async (int id, DeleteGameUseCase useCase) =>
+{
+    try
+    {
+        var result = await useCase.ExecuteAsync(id);
+        return result.IsSuccess ? Results.Ok() : Results.NotFound(result.Errors);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: 500);
+    }
+});
+
+await app.RunAsync();
