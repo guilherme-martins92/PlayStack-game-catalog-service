@@ -28,6 +28,30 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+
+    const int maxRetries = 10;
+    var retries = 0;
+
+    while (true)
+    {
+        try
+        {
+            await db.Database.MigrateAsync();
+            Console.WriteLine("Migrations aplicadas com sucesso.");
+            break;
+        }
+        catch (Exception ex) when (retries < maxRetries)
+        {
+            retries++;
+            Console.WriteLine($"Tentativa {retries}: aguardando banco... {ex.Message}");
+            Thread.Sleep(2000); // espera 2 segundos
+        }
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

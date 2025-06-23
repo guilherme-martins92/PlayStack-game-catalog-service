@@ -1,30 +1,27 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-
-# This stage is used to build the service project
+# Etapa 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Catalog.Api/Catalog.Api.csproj", "Catalog.Api/"]
-RUN dotnet restore "./Catalog.Api/Catalog.Api.csproj"
+
+# Copia os arquivos .csproj das dependências
+COPY Catalog.Api/Catalog.Api.csproj Catalog.Api/
+COPY Catalog.Application/Catalog.Application.csproj Catalog.Application/
+COPY Catalog.Domain/Catalog.Domain.csproj Catalog.Domain/
+COPY Catalog.Infrastructure/Catalog.Infrastructure.csproj Catalog.Infrastructure/
+
+# Restaura dependências
+RUN dotnet restore Catalog.Api/Catalog.Api.csproj
+
+# Copia o restante do código
 COPY . .
-WORKDIR "/src/Catalog.Api"
-RUN dotnet build "./Catalog.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Catalog.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Build do projeto
+WORKDIR /src/Catalog.Api
+RUN dotnet build Catalog.Api.csproj -c Release -o /app/build
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
+# Etapa 2: Publish
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+COPY --from=build /app/build .
+
 ENTRYPOINT ["dotnet", "Catalog.Api.dll"]

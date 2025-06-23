@@ -12,7 +12,7 @@ namespace Catalog.Infrastructure.DependencyInjection
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<CatalogDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("Default")));
+                options.UseNpgsql(configuration.GetConnectionString("PostgreSQL")));
 
             services.AddScoped<IGameRepository, GameRepository>();
 

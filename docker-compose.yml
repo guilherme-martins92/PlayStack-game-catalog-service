@@ -1,25 +1,25 @@
 version: '3.8'
 
 services:
-  api:
+  catalog-api:
     build:
-      context: ./src/PlayStack-game-catalog-service
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: Catalog.Api/Dockerfile
     ports:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=playstack_catalog;Username=postgres;Password=yourpassword
+      ConnectionStrings__PostgreSQL: Host=dbGames;Port=5432;Database=dbGames;Username=postgres;Password=yourpassword
     depends_on:
-      - postgres
+      - dbGames
 
-  postgres:
+  dbGames:
     image: postgres:15
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: yourpassword
-      POSTGRES_DB: playstack_catalog
+      POSTGRES_DB: dbGames
     ports:
       - "5432:5432"
     volumes:
