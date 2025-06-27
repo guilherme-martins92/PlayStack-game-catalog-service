@@ -2,23 +2,47 @@ using Catalog.Application.UseCases.CreateGameUseCase;
 using Catalog.Application.UseCases.DeleteGameUseCase;
 using Catalog.Application.UseCases.GetAllGamesUseCase;
 using Catalog.Application.UseCases.GetGameByIdUseCase;
+using Catalog.Application.UseCases.LoginUseCase;
 using Catalog.Application.UseCases.UpdateGameUseCase;
 using Catalog.Infrastructure.Data;
 using Catalog.Infrastructure.DependencyInjection;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddAuthorization();
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = "Catalog.API",
+            ValidAudience = "Catalog.Client",
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes("sua-chave-secreta-supersegura"))
+        };
+    });
+
 builder.Services
-    .AddOpenApi()
-    .AddInfrastructure(builder.Configuration);
+       .AddOpenApi()
+       .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddScoped<GetGameByIdUseCase>();
 builder.Services.AddScoped<CreateGameUseCase>();
 builder.Services.AddScoped<GetAllGamesUseCase>();
 builder.Services.AddScoped<DeleteGameUseCase>();
 builder.Services.AddScoped<UpdateGameUseCase>();
+builder.Services.AddScoped<LoginUseCase>();
 
 builder.Services.AddScoped<IValidator<CreateGameInput>, CreateGameValidator>();
 builder.Services.AddScoped<IValidator<UpdateGameInput>, UpdateGameValidator>();
@@ -59,6 +83,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapPost("/login", [AllowAnonymous] (LoginRequest request, LoginUseCase useCase) =>
+{
+    var token = useCase.Execute(request.Username, request.Password);
+
+    return token is null
+        ? Results.Unauthorized()
+        : Results.Ok(new { token });
+});
 
 app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
 {
@@ -73,7 +108,7 @@ app.MapGet("/game/{id}", async (int id, GetGameByIdUseCase useCase) =>
     }
 });
 
-app.MapGet("/games", async (GetAllGamesUseCase useCase) =>
+app.MapGet("/games", [Authorize] async (GetAllGamesUseCase useCase) =>
 {
     try
     {
