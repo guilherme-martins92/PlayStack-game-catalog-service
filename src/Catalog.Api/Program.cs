@@ -10,10 +10,12 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddAuthorization();
 
 builder.Services.AddAuthentication("Bearer")
@@ -32,6 +34,33 @@ builder.Services.AddAuthentication("Bearer")
                 Encoding.UTF8.GetBytes("sua-chave-secreta-supersegura"))
         };
     });
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o token no formato: Bearer {seu token}"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme { Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 builder.Services
        .AddOpenApi()
@@ -52,34 +81,36 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
 
-    const int maxRetries = 10;
-    var retries = 0;
+//    const int maxRetries = 10;
+//    var retries = 0;
 
-    while (true)
-    {
-        try
-        {
-            await db.Database.MigrateAsync();
-            Console.WriteLine("Migrations aplicadas com sucesso.");
-            break;
-        }
-        catch (Exception ex) when (retries < maxRetries)
-        {
-            retries++;
-            Console.WriteLine($"Tentativa {retries}: aguardando banco... {ex.Message}");
-            Thread.Sleep(2000); // espera 2 segundos
-        }
-    }
-}
+//    while (true)
+//    {
+//        try
+//        {
+//            await db.Database.MigrateAsync();
+//            Console.WriteLine("Migrations aplicadas com sucesso.");
+//            break;
+//        }
+//        catch (Exception ex) when (retries < maxRetries)
+//        {
+//            retries++;
+//            Console.WriteLine($"Tentativa {retries}: aguardando banco... {ex.Message}");
+//            Thread.Sleep(2000); // espera 2 segundos
+//        }
+//    }
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
