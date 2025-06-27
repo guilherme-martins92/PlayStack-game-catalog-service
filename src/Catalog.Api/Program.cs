@@ -31,7 +31,7 @@ builder.Services.AddAuthentication("Bearer")
             ValidIssuer = "Catalog.API",
             ValidAudience = "Catalog.Client",
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes("sua-chave-secreta-supersegura"))
+                Encoding.UTF8.GetBytes("3hP7Zx9RzF!wY&2uD$kLm@N0pQs#vXeBjLuTgHwYzXc="))
         };
     });
 
@@ -81,29 +81,29 @@ builder.Services.AddDbContext<CatalogDbContext>(options =>
 
 var app = builder.Build();
 
-//using (var scope = app.Services.CreateScope())
-//{
-//    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
 
-//    const int maxRetries = 10;
-//    var retries = 0;
+    const int maxRetries = 10;
+    var retries = 0;
 
-//    while (true)
-//    {
-//        try
-//        {
-//            await db.Database.MigrateAsync();
-//            Console.WriteLine("Migrations aplicadas com sucesso.");
-//            break;
-//        }
-//        catch (Exception ex) when (retries < maxRetries)
-//        {
-//            retries++;
-//            Console.WriteLine($"Tentativa {retries}: aguardando banco... {ex.Message}");
-//            Thread.Sleep(2000); // espera 2 segundos
-//        }
-//    }
-//}
+    while (true)
+    {
+        try
+        {
+            await db.Database.MigrateAsync();
+            Console.WriteLine("Migrations aplicadas com sucesso.");
+            break;
+        }
+        catch (Exception ex) when (retries < maxRetries)
+        {
+            retries++;
+            Console.WriteLine($"Tentativa {retries}: aguardando banco... {ex.Message}");
+            Thread.Sleep(2000); // espera 2 segundos
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
